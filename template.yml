@@ -1,0 +1,102 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform:
+- AWS::Serverless-2016-10-31
+Parameters:
+  Environment:
+    Type: String
+    Default: development
+  Owner:
+    Type: String
+Resources:
+  Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/sqs-emitir-reserva.sqsEmitirReserva
+      Runtime: nodejs12.x
+      MemorySize: 128
+      Timeout: 60
+      Events:
+        MySQSEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt EmitirReservaQueue.Arn
+            BatchSize: 1
+      Role: !GetAtt Role.Arn
+      Environment:
+        Variables:
+          NODE_ENV: !Ref Environment
+      VpcConfig:
+        SecurityGroupIds:
+        - !Ref SecurityGroup
+        SubnetIds:
+        - !ImportValue platform-private-subnet-1
+      Tags:
+        Name: !Ref AWS::StackName
+        Owner: !Ref Owner
+        Environment: !Ref Environment
+  EmitirReservaQueue:
+    Type: "AWS::SQS::Queue"
+    Properties:
+      DelaySeconds: 30
+      MessageRetentionPeriod: 345600 # segundos. 4 dias
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 60
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub 'Rules for ${AWS::StackName}.'
+      VpcId: !ImportValue platform-vpc
+      SecurityGroupEgress:
+      - CidrIp: 0.0.0.0/0
+        IpProtocol: -1
+        Description: Allow all outbound traffic.
+      Tags:
+      - Key: Name
+        Value: !Ref AWS::StackName
+      - Key: Owner
+        Value: !Ref Owner
+      - Key: Environment
+        Value: !Ref Environment
+  Role:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Ref AWS::StackName
+      Path: /
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: 
+            - 'lambda.amazonaws.com'
+          Action:
+          - 'sts:AssumeRole'
+      Policies:
+      - PolicyName: !Ref AWS::StackName
+        PolicyDocument:
+          Version: 2012-10-17
+          Statement:
+          - Effect: Allow
+            Action:
+            - 'logs:CreateLogGroup'
+            - 'logs:CreateLogStream'
+            - 'logs:PutLogEvents'
+            - 'ec2:CreateNetworkInterface'
+            - 'ec2:DescribeNetworkInterfaces'
+            - 'ec2:DeleteNetworkInterface'
+            Resource: '*'
+          - Effect: Allow
+            Action:
+            - "sqs:SendMessage"
+            - "sqs:ReceiveMessage"
+            - "sqs:DeleteMessage"
+            - "sqs:GetQueueAttributes"
+            Resource: 
+              - !GetAtt EmitirReservaQueue.Arn
+              - Fn::ImportValue:
+                  !Sub 'platform-dead-letter-${Environment}-queue-arn'
+Outputs:
+  EmitirReservaQueue:
+    Value: !Ref EmitirReservaQueue
+    Export:
+      Name: !Sub '${AWS::StackName}-sqs'   

@@ -1,0 +1,135 @@
+version: "3.5"
+
+services:
+  microservice-colaboradores:
+    image: 957296915963.dkr.ecr.us-east-1.amazonaws.com/microservice-colaboradores:latest
+    depends_on:
+      - "mongo"
+    environment:
+      - "MongoDbConfiguration__ConnectionString=mongodb://devs:gwEg4258npNjUGCArcTmZDF4h3HVY2es@host.docker.internal:27117/admin?ssl=false"
+
+  microservice-reserva-hospedagens:
+    image: 957296915963.dkr.ecr.us-east-1.amazonaws.com/microservice-reserva-hospedagens:latest
+    depends_on:
+      - "mongo"
+      - "redis"
+    environment:
+      - "MongoDbConfiguration__ConnectionString=mongodb://devs:gwEg4258npNjUGCArcTmZDF4h3HVY2es@host.docker.internal:27117/admin?ssl=false"
+      - "PaymentMongoDbConfiguration__ConnectionString=mongodb://devs:gwEg4258npNjUGCArcTmZDF4h3HVY2es@host.docker.internal:27117/admin?ssl=false"
+      - "RedisConnection__ConnectionString=redis"
+      - "SnsConfiguration__ArnTopico=arn:aws:sns:us-east-1:000000000000:SnsBookingTopico"
+      - "S3Configuration__BucketArn=arn:aws:s3:::fc-bkt-dev-logs-broker/*"
+      - "S3Configuration__BucketName=fc-bkt-dev-logs-broker"
+      - "S3Configuration__BucketAwsServiceUrl=http://localstack:4566"
+      - "S3Configuration__BucketAwsRegion=us-east-1"
+      - "AWS_DEFAULT_REGION=us-east-1"
+      - "AWS_BUCKET_NAME=fc-bkt-dev-logs-broker"
+      - "AWS_ACCESS_KEY_ID=123"
+      - "AWS_SECRET_ACCESS_KEY=xyz"
+      - "AWS_SECRET_KEY=xyz"
+
+  microservice-reserva-aereo:
+    image: 957296915963.dkr.ecr.us-east-1.amazonaws.com/microservice-reserva-aereo:latest
+    depends_on:
+      - "mongo"
+      - "redis"
+    environment:
+      - "MongoDbConfiguration__ConnectionString=mongodb://devs:gwEg4258npNjUGCArcTmZDF4h3HVY2es@host.docker.internal:27117/admin?ssl=false"
+      - "RedisConnection__ConnectionString=redis"
+      - "SnsConfiguration__ArnTopico=arn:aws:sns:us-east-1:000000000000:SnsBookingTopico"
+      - "AWS__Region=us-east-1"
+      - "AWS_ACCESS_KEY_ID=xxx"
+      - "AWS_SECRET_ACCESS_KEY=xxx"
+
+  microservice-movimento-reserva:
+    image: 957296915963.dkr.ecr.us-east-1.amazonaws.com/microservice-movimento-reserva:latest
+    depends_on:
+      - "mongo"
+    environment:
+      - "MongoDbMovimentoReservaConfiguration__ConnectionString=mongodb://devs:gwEg4258npNjUGCArcTmZDF4h3HVY2es@host.docker.internal:27117/admin?ssl=false"
+
+  microservice-fornecedor:
+    image: 957296915963.dkr.ecr.us-east-1.amazonaws.com/microservice-fornecedor:latest
+    depends_on:
+      - "mongo"
+    environment:
+      - "FornecedorDatabaseSettings__ConnectionString=mongodb://devs:gwEg4258npNjUGCArcTmZDF4h3HVY2es@host.docker.internal:27117/admin?ssl=false"
+      - "AWS__Region=us-east-1"
+      - "AWS_ACCESS_KEY_ID=xxx"
+      - "AWS_SECRET_ACCESS_KEY=xxx"
+
+  microservice-assinatura:
+    image: 957296915963.dkr.ecr.us-east-1.amazonaws.com/microservice-assinatura:latest
+    depends_on:
+      - "mongo"
+    environment:
+      - "MongoDbAssinaturaConfiguration__ConnectionString=mongodb://devs:gwEg4258npNjUGCArcTmZDF4h3HVY2es@host.docker.internal:27117/admin?ssl=false"
+      - "AWS__Region=us-east-1"
+      - "AWS_ACCESS_KEY_ID=xxx"
+      - "AWS_SECRET_ACCESS_KEY=xxx"
+
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack_reserva_hospedagens
+    ports:
+      - "4563-4599:4563-4599"
+      - "5003:8080"
+    environment:
+      - SERVICES=sqs
+      - DEBUG=1
+      - DATA_DIR=/tmp/localstack/data
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=xxx
+      - AWS_SECRET_ACCESS_KEY=xxx
+      - HOSTNAME=localhost
+      - HOSTNAME_EXTERNAL=localhost
+    volumes:
+      - "./.localstack:/tmp/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "./fixtures/aws/aws.sh:/docker-entrypoint-initaws.d/aws.sh"
+
+  microservice-pagamentos:
+    image: 957296915963.dkr.ecr.us-east-1.amazonaws.com/microservice-pagamentos:latest
+    depends_on:
+      - "mongo"
+    environment:
+      - "MongoDbConfiguration__ConnectionString=mongodb://devs:gwEg4258npNjUGCArcTmZDF4h3HVY2es@host.docker.internal:27217/admin?ssl=false"
+
+  api-salesforce:
+    image: 957296915963.dkr.ecr.us-east-1.amazonaws.com/api-salesforce:latest
+
+  microservice-notificacao:
+    image: 957296915963.dkr.ecr.us-east-1.amazonaws.com/microservice-notificacao:latest
+
+  api-salesforce:
+    image: 957296915963.dkr.ecr.us-east-1.amazonaws.com/api-salesforce:latest
+
+  microservice-notificacao:
+    image: 957296915963.dkr.ecr.us-east-1.amazonaws.com/microservice-notificacao:latest
+
+  microservice-opcao-de-pagamento:
+    image: 957296915963.dkr.ecr.us-east-1.amazonaws.com/microservice-opcao-de-pagamento:latest
+    depends_on:
+      - "mongo"
+      - "redis"
+    environment:
+      - "MongoDbConfiguration__ConnectionString=mongodb://devs:gwEg4258npNjUGCArcTmZDF4h3HVY2es@host.docker.internal:27117/admin?ssl=false"
+      - "RedisConnection__ConnectionString=redis"
+
+  mongo:
+    image: mongo
+    volumes:
+      - "./mongo-fixtures/mongoColaborador.js:/docker-entrypoint-initdb.d/mongoColaborador.js"
+      - "./mongo-fixtures/mongoReserva.js:/docker-entrypoint-initdb.d/mongoReserva.js"
+      - "./mongo-fixtures/mongoMovimentoReserva.js:/docker-entrypoint-initdb.d/mongoMovimentoReserva.js"
+      - "./mongo-fixtures/mongoFornecedor.js:/docker-entrypoint-initdb.d/mongoFornecedor.js"
+      - "./mongo-fixtures/mongoAssinatura.js:/docker-entrypoint-initdb.d/mongoAssinatura.js"
+      - "./mongo-fixtures/mongoReservaAereo.js:/docker-entrypoint-initdb.d/mongoReservaAereo.js"
+
+  mongo-express:
+    image: mongo-express
+    depends_on:
+      - "mongo"
+
+  redis:
+    image: redis

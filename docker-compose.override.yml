@@ -1,0 +1,87 @@
+version: '3.5'
+
+services:
+  microservice-reserva-hospedagens:
+    ports:
+      - "32316:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+
+  microservice-reserva-aereo:
+    ports:
+      - "32322:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development 
+
+  microservice-colaboradores:
+    ports:
+      - "32307:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+
+  microservice-movimento-reserva:
+    ports:
+      - "32329:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+ 
+  microservice-fornecedor:
+    ports:
+      - "32314:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+
+  microservice-assinatura:
+    ports:
+      - "32303:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+  
+  microservice-pagamentos:
+    ports:
+      - "32219:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development  
+  
+  api-salesforce:
+    ports:
+      - "32606:80"
+    environment:
+      - NODE_ENV=development 
+  
+  microservice-notificacao:
+    ports:
+      - "32220:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development  
+
+  api-salesforce:
+    ports:
+      - "32606:80"
+    environment:
+      - NODE_ENV=development 
+  
+  microservice-notificacao:
+    ports:
+      - "32220:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development  
+
+  microservice-opcao-de-pagamento:
+    ports:
+      - "32218:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development 
+
+  mongo:
+    ports:
+    - "27018:27017"
+
+  mongo-express:
+    image: mongo-express
+    ports:
+      - "8081"
+
+  redis:
+    ports:
+      - "32771:6379"
